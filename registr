@@ -15,3 +15,47 @@
 	</form>
 </body>
 </html>
+<?php
+	require('db.php');
+
+	if (isset($_POST['login'])) {
+		$email = $_POST['email'];
+		$phone = $_POST['phone'];
+		$login = $_POST['login'];
+		$pasw = $_POST['pasw'];
+		$pasw_r = $_POST['pasw_r'];
+		
+		if (!preg_match('/^([a-zA-Z0-9_-]+\.)*[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)*\.[a-z]{2,6}$/', $email))
+			die("Введен некорректный email");
+		if (!preg_match('/^(\+){1}([0-9]{11})$/', $phone))
+			die("Введен некорректный телефон");
+		if (!preg_match('/^([a-zA-Z]{1})([a-zA-Z0-9_]{5,})$/', $login))
+			die("Введен некорректный логин");
+		if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[%\$#@&\*\^\|\/~\{\}\[\]\\\])[a-zA-Z0-9%\$#@&\*\^\|\/~\{\}\[\]\\\]{8,}$/', $pasw))
+			die("Введен некорректный пароль");
+		if ($pasw != $pasw_r)
+			die("Пароли не совпадают");
+
+		$query = "
+			SELECT * 
+			FROM users
+			WHERE
+				email = '$email' OR
+				phone = '$phone' OR
+				login = '$login'
+		";
+		$result = mysqli_query($conn, $query) or die(mysql_errno());
+		if (mysqli_num_rows($result) == 0) {
+			$query = "
+				INSERT INTO users (email, login, phone, pass)
+				VALUES ('$email', '$login', '$phone', '".md5($pasw)."')
+			";
+			$result = mysqli_query($conn, $query);
+			if($result) {
+				echo "Вы успешно зарегистрировались";
+			}
+		} else {
+			die("Данный пользователь уже существует");
+		}
+	}
+?>
